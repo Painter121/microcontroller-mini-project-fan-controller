@@ -1,0 +1,10 @@
+[
+  {
+    "source": "micro controller\\codeProject.txt",
+    "destination": "main.py",
+    "source_sha256": "dcc1a20d059f0ae4c8e56f85c0d2bf7021dde6b7c90f18f86d86adf94b982495",
+    "sha256": "e524abcbd6903e99f718fcc9bcfe360be9495ed225d4cbfa019295b7cd63d93b",
+    "modified": true,
+    "note": "Converted trailing Thai note into a Python comment; original unchanged."
+  }
+]
