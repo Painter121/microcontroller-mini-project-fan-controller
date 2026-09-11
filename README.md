@@ -1,105 +1,230 @@
-# Microcontroller Mini Project — Smart Fan Controller with MicroPython
+# Microcontroller Mini-Projects — Embedded Systems & IoT (ESP32)
 
-มินิโปรเจกต์ระบบควบคุมพัดลมอัจฉริยะแบบฝังตัว พัฒนาด้วยภาษา **MicroPython บนบอร์ดไมโครคอนโทรลเลอร์ ESP32**
+คลังโครงงานวิชาไมโครคอนโทรลเลอร์ (Microcontroller Engineering) พัฒนาบนไมโครคอนโทรลเลอร์ ESP32 ด้วยภาษา MicroPython รวบรวม 2 โครงงานระบบสมองกลฝังตัวและอินเทอร์เน็ตของสรรพสิ่ง (IoT) ที่เน้นการประยุกต์ใช้เซนเซอร์ ไทม์เมอร์ และการสื่อสารไร้สาย:
 
-ระบบผสานการทำงานร่วมกันระหว่างเซ็นเซอร์วัดสภาพแวดล้อม (**DHT22**), นาฬิกาบอกเวลาจริง (**RTC DS3231**), การควบคุมความเร็วรอบและทิศทางมอเตอร์กระแสตรงด้วยสัญญาณ **PWM**, การป้อนคำสั่งตั้งค่าผ่าน **Matrix Keypad 4×4**, การแสดงผลแบบเรียลไทม์บนจอ **I2C LCD 16×2** และการจัดเก็บการตั้งค่าลงไฟล์ระบบ (`data.txt`) เพื่อคงสถานะเมื่อรีสตาร์ตบอร์ด
-
----
-
-## 1. คุณสมบัติเด่นของระบบ (System Features)
-
-- **ระบบวัดอุณหภูมิและความชื้นแบบเรียลไทม์:** อ่านค่าจากเซ็นเซอร์ DHT22 เพื่อนำมาเปรียบเทียบกับเงื่อนไขเปิด-ปิดพัดลมอัตโนมัติ
-- **ระบบตั้งเวลาสองช่วง (Dual Time Slot Scheduling):** กำหนดเวลาเริ่ม-หยุดทำงานได้ 2 ช่วงเวลาอิสระต่อวัน (Time Slot 1 และ Time Slot 2) โดยอ้างอิงเวลาจริงระดับวินาทีจากโมดูล RTC DS3231
-- **การตัดสินใจแบบเงื่อนไขคู่ (Dual Condition Control):** ในโหมดตั้งเวลา (Timer ON) พัดลมจะทำงานเฉพาะเมื่อ **เวลาปัจจุบันอยู่ในช่วงที่กำหนด** และ **อุณหภูมิอยู่ในช่วงที่ตั้งไว้ (startTemp ถึง stopTemp)** พร้อมกัน
-- **การปรับแต่งมอเตอร์แบบละเอียด:**
-  - ปรับระดับความเร็วรอบได้ตั้งแต่ 1% ถึง 100% ผ่านสัญญาณ PWM (ความถี่ 5,000 Hz)
-  - สลับทิศทางการหมุนได้ทั้งแบบหมุนซ้าย (Left Spin) และหมุนขวา (Right Spin)
-- **การแสดงผลอัจฉริยะแบบสลับหน้าจอ (Auto Display Toggle):** สลับข้อมูลบนจอ LCD 16x2 ทุก 5 วินาที:
-  - *หน้าจอที่ 1:* เวลาปัจจุบัน [HH:MM:SS], อุณหภูมิ และสถานะ Timer (ON/OFF)
-  - *หน้าจอที่ 2:* ระดับความเร็วรอบ (%) และทิศทางการหมุน (Left/Right)
-- **ระบบเมนูคำสั่งผ่าน Keypad:** สามารถกด `*` เพื่อเข้าสู่เมนูคำสั่ง 14 โหมดได้อย่างสะดวก
-- **การสำรองข้อมูลถาวร (Persistent Storage):** บันทึกค่าเวลา ความเร็วรอบ ทิศทาง และช่วงอุณหภูมิลงไฟล์ `data.txt` บน Flash Memory ของ ESP32 โดยอัตโนมัติ
+1. **โครงงานที่ 1: เครื่องควบคุมความเร็วพัดลมตามอุณหภูมิแบบตั้งเวลา (Temperature-Controlled Fan System)**
+   - ควบคุมความเร็วและทิศทางมอเตอร์ DC ผ่านสัญญาณ PWM ตามอุณหภูมิแวดล้อม (DHT22)
+   - กำหนดช่วงเวลาเปิด-ปิดอัตโนมัติ 2 ช่วงเวลาอิสระ (DS3231 RTC) พร้อมอินพุตคีย์แพ็ด 4x4
+2. **โครงงานที่ 2: เครื่องควบคุมหลอดไฟตามการเคลื่อนไหวแบบตั้งเวลาผ่านเว็บไซด์และบลูทูธ (Smart Motion-Activated Light Controller with BLE & Firebase Web Control)**
+   - ตรวจจับความเคลื่อนไหวด้วยเซนเซอร์อินฟราเรด PIR (HC-SR501) ร่วมกับเงื่อนไขตัวตั้งเวลา 2 ช่วง
+   - รองรับการสั่งการ 3 ช่องทางพร้อมกัน: คีย์แพ็ด 4x4, บลูทูธพลังงานต่ำ (BLE UART), และเว็บแดชบอร์ดผ่าน Firebase Realtime Database
 
 ---
 
-## 2. ผังการเชื่อมต่อขาอุปกรณ์ (Hardware Pinout)
-
-| อุปกรณ์ / โมดูล | ขาของอุปกรณ์ | ขา ESP32 | หน้าที่การทำงาน |
-|---|---|---|---|
-| **DHT22 Sensor** | DATA | `GPIO 18` | รับส่งสัญญาณข้อมูลดิจิทัลวัดอุณหภูมิและความชื้น |
-| **I2C LCD Display (16×2)** | SDA / SCL | `GPIO 21` (SDA)<br>`GPIO 22` (SCL) | การสื่อสาร I2C บัสสำหรับสั่งงานจอ LCD |
-| **RTC DS3231 Module** | SDA / SCL | `GPIO 21` (SDA)<br>`GPIO 22` (SCL) | ใช้อินเทอร์เฟซ I2C ร่วมกับจอ LCD เพื่ออ่านเวลาจริง |
-| **Matrix Keypad 4×4** | Rows (R1–R4) | `GPIO 12, 13, 14, 15` | ขาขับสัญญาณแถวแนวนอน (Digital Output) |
-| | Cols (C1–C4) | `GPIO 26, 27, 32, 33` | ขาอ่านสัญญาณคอลัมน์แนวตั้ง (Input Pull-Down) |
-| **DC Motor Driver (L298N)** | EN (Enable) | `GPIO 5` | ขาเปิด-ปิดไฟเลี้ยงขับมอเตอร์ |
-| | IN1 (PWM1) | `GPIO 16` | สัญญาณ PWM ขับมอเตอร์หมุนขวา (Freq 5 kHz) |
-| | IN2 (PWM2) | `GPIO 17` | สัญญาณ PWM ขับมอเตอร์หมุนซ้าย (Freq 5 kHz) |
-
-```text
-                        ┌───────────────────────────────┐
-                        │          ESP32 Board          │
-                        │                               │
-[DHT22 Data] ───────────┤ GPIO 18                       │
-                        │                               │
-[I2C SDA (LCD & RTC)] ──┤ GPIO 21                       │
-[I2C SCL (LCD & RTC)] ──┤ GPIO 22                       │
-                        │                               │
-[Keypad Rows 1-4] ──────┤ GPIO 12, 13, 14, 15           │
-[Keypad Cols 1-4] ──────┤ GPIO 26, 27, 32, 33           │
-                        │                               │
-[Motor Driver Enable] ──┤ GPIO 5                        │
-[Motor Driver IN1/PWM1] ┤ GPIO 16                       │
-[Motor Driver IN2/PWM2] ┤ GPIO 17                       │
-                        └───────────────────────────────┘
-```
-
----
-
-## 3. แผนผังเมนูคำสั่งผ่าน Keypad (Command Menu Map)
-
-ผู้ใช้สามารถสั่งงานระบบได้โดยการกดปุ่ม `*` บน Keypad ตามด้วย **หมายเลขโหมด (1–14)** แล้วกดปุ่ม `#` เพื่อยืนยัน
-
-| โหมด (Mode) | ชื่อฟังก์ชัน | คำอธิบายและการใช้งาน |
-|:---:|---|---|
-| **1** | `SetTime` | ตั้งเวลานาฬิกาปัจจุบันของโมดูล RTC DS3231 (ป้อนชั่วโมง, นาที, วินาที) |
-| **2** | `SetSpeed` | ป้อนระดับความเร็วรอบพัดลมที่ต้องการ (1–100%) |
-| **3** | `SetDir` | เลือกทิศทางการหมุนของมอเตอร์ (กด 1: หมุนซ้าย / กด 2: หมุนขวา) |
-| **4** | `TimerOff` | ปิดระบบตั้งเวลาอัตโนมัติ (Manual Mode: พัดลมไม่หมุนตามเงื่อนไขเวลา) |
-| **5** | `TimerOn` | เปิดระบบตั้งเวลาอัตโนมัติ (เริ่มตรวจสอบเงื่อนไขเวลาและอุณหภูมิ) |
-| **6** | `SetStartTime1` | กำหนดเวลาเริ่มต้นทำงาน ช่วงที่ 1 |
-| **7** | `SetStopTime1` | กำหนดเวลาสิ้นสุดการทำงาน ช่วงที่ 1 |
-| **8** | `ShowTime1` | แสดงเวลาเริ่มและหยุดของช่วงที่ 1 บนจอ LCD |
-| **9** | `SetStartTime2` | กำหนดเวลาเริ่มต้นทำงาน ช่วงที่ 2 |
-| **10** | `SetStopTime2` | กำหนดเวลาสิ้นสุดการทำงาน ช่วงที่ 2 |
-| **11** | `ShowTime2` | แสดงเวลาเริ่มและหยุดของช่วงที่ 2 บนจอ LCD |
-| **12** | `SetStartTemp` | กำหนดค่าอุณหภูมิขั้นต่ำที่ต้องการให้พัดลมเริ่มทำงาน (°C) |
-| **13** | `SetStopTemp` | กำหนดค่าอุณหภูมิสูงสุดที่พัดลมจะหยุดทำงาน (°C) |
-| **14** | `ShowTemp` | อ่านค่าอุณหภูมิล่าสุดและแสดงช่วงอุณหภูมิที่ตั้งค่าไว้ |
-
----
-
-## 4. โครงสร้างไฟล์ใน Repository
+## สารบัญโครงสร้าง Repository
 
 ```text
 microcontroller-mini-project-fan-controller/
-├── lib/
-│   ├── ds3231.py             # ไดรเวอร์โมดูลนาฬิกา Real-Time Clock DS3231
-│   ├── i2c_lcd.py            # ไดรเวอร์จอ LCD ผ่านบอร์ดแปลง I2C (PCF8574)
-│   └── lcd_api.py            # คลาสฐานสำหรับคำสั่งควบคุมข้อความบนจอ LCD
-├── main.py                   # ซอร์สโค้ดหลัก MicroPython สำหรับระบบควบคุมพัดลม
-├── provenance.json           # บันทึกประวัติและแฮชความถูกต้องของไฟล์ต้นฉบับ
+├── projects/
+│   ├── 01-temperature-fan-controller/       # โครงงานควบคุมพัดลมตามอุณหภูมิและเวลา
+│   │   ├── main.py                          # เฟิร์มแวร์ MicroPython ควบคุมพัดลม
+│   │   └── README.md                        # เอกสารอธิบายโครงงานพัดลมฉบับเต็ม
+│   │
+│   └── 02-motion-light-controller/          # โครงงานควบคุมหลอดไฟตามการเคลื่อนไหวและ IoT
+│       ├── firmware/
+│       │   └── main.py                      # เฟิร์มแวร์ MicroPython (BLE + Firebase + PIR + RTC)
+│       ├── web/
+│       │   └── index.html                   # เว็บแดชบอร์ดเชื่อมต่อ Firebase Realtime Database
+│       └── README.md                        # เอกสารอธิบายโครงงานหลอดไฟอัจฉริยะฉบับเต็ม
+│
+├── lib/                                     # ไลบรารีไดรเวอร์ฮาร์ดแวร์ MicroPython
+│   ├── ds3231.py                            # ไดรเวอร์ Real-Time Clock โมดูล DS3231 (I2C)
+│   ├── i2c_lcd.py                           # ไดรเวอร์จอแสดงผล LCD 16x2 ผ่านบัส I2C (PCF8574)
+│   └── lcd_api.py                           # คลาสฐานคำสั่งจัดการตัวอักษรและตำแหน่งเคอร์เซอร์บน LCD
+│
+├── docs/
+│   └── images/
+│       ├── fan-controller/                  # วงจร โฟลว์ชาร์ต และภาพถ่ายผลการทดสอบพัดลม 16 กรณี
+│       └── motion-light/                    # วงจร โฟลว์ชาร์ต และภาพถ่ายผลการทดสอบระบบหลอดไฟ
+│
+├── main.py                                  # สคริปต์รันเริ่มต้นบนบอร์ด ESP32 (พัดลม)
 └── README.md
 ```
 
 ---
 
-## 5. การเปิดใช้งานและการทดสอบ (Getting Started)
+## ภาพรวมและการเปรียบเทียบทั้งสองโครงงาน
 
-1. **เตรียมบอร์ด ESP32:**
-   - ติดตั้งเฟิร์มแวร์ MicroPython เวอร์ชันล่าสุดลงบนบอร์ด ESP32
-2. **เปิดโปรแกรม Thonny IDE:**
-   - เชื่อมต่อบอร์ด ESP32 ผ่านสาย USB และเลือก Interpreter เป็น `MicroPython (ESP32)`
-3. **อัปโหลดไฟล์ไลบรารี:**
-   - คัดลอกโฟลเดอร์ `lib/` (ประกอบด้วย `ds3231.py`, `i2c_lcd.py`, `lcd_api.py`) ไปไว้บนบอร์ด ESP32
-4. **เปิดใช้งานโปรแกรม:**
-   - เปิดไฟล์ `main.py` ใน Thonny IDE แล้วกดปุ่ม **Run (F5)** หรือบันทึกเป็นชื่อ `main.py` บนตัวบอร์ดเพื่อให้ทำงานอัตโนมัติทันทีที่จ่ายไฟ
+| คุณลักษณะ | โครงงานที่ 1: พัดลมอัจฉริยะ | โครงงานที่ 2: หลอดไฟตรวจจับความเคลื่อนไหว |
+|---|---|---|
+| **ไมโครคอนโทรลเลอร์** | ESP32 NodeMCU | ESP32 NodeMCU |
+| **เซนเซอร์ตรวจวัด** | DHT22 (วัดอุณหภูมิและความชื้น) | PIR HC-SR501 (ตรวจจับการเคลื่อนไหว) |
+| **การควบคุมเวลา** | DS3231 Real-Time Clock (I2C) | DS3231 Real-Time Clock (I2C) |
+| **อุปกรณ์เอาต์พุต** | DC Motor + ไดรเวอร์ ET-MINI (PWM & ทิศทาง) | หลอดไฟ / LED Relay Module (Pin 25) |
+| **การแสดงผล** | 16x2 I2C LCD (0x27) สลับหน้าจออัตโนมัติทุก 5 วินาที | 16x2 I2C LCD (0x27) แสดงเวลาและสถานะตรวจจับ |
+| **อินเทอร์เฟซควบคุม** | 4x4 Keypad (14 ฟังก์ชันคำสั่ง) | 4x4 Keypad + BLE UART + Firebase Web App |
+| **การเชื่อมต่อไร้สาย** | - | Wi-Fi (802.11 b/g/n) + BLE 4.2 UART Service |
+| **การเก็บบันทึกสถานะ** | Persistent Flash Storage (`data.txt`) | Persistent Flash Storage (`data.json`) |
+
+---
+
+## 1. โครงงานที่ 1: เครื่องควบคุมความเร็วพัดลมตามอุณหภูมิแบบตั้งเวลา
+
+### สถาปัตยกรรมและตารางการต่อวงจร (Hardware Pinout)
+
+<div align="center">
+  <img src="docs/images/fan-controller/fan-circuit-schematic.png" alt="วงจรเชื่อมต่อระบบควบคุมพัดลม ESP32" width="700" />
+</div>
+
+| อุปกรณ์ / โมดูล | ขาสัญญาณ | ขาบอร์ด ESP32 | หน้าที่การทำงาน |
+|---|---|---|---|
+| **DHT22** | DATA | `GPIO 18` (Pull-up 10k) | เซนเซอร์วัดอุณหภูมิห้อง |
+| **DS3231 RTC** | SDA / SCL | `GPIO 21` / `GPIO 22` | โมดูลนาฬิกาเวลาจริง I2C Bus |
+| **I2C LCD 16x2** | SDA / SCL | `GPIO 21` / `GPIO 22` | หน้าจอแสดงผลเวลา อุณหภูมิ สถานะพัดลม |
+| **DC Motor Driver** | EN / IN1 / IN2 | `GPIO 5` / `GPIO 16` / `GPIO 17` | ควบคุมเปิด-ปิด, ความเร็ว (PWM1/PWM2 5kHz), ทิศทาง L/R |
+| **4x4 Matrix Keypad** | Rows (R1-R4) | `GPIO 12, 13, 14, 15` | แถวแนวนอน (Digital Output) |
+| **4x4 Matrix Keypad** | Cols (C1-C4) | `GPIO 26, 27, 32, 33` | คอลัมน์แนวตั้ง (Input Pull-Down) |
+
+### แผนผังโฟลว์ชาร์ตการทำงาน (Flowchart)
+
+<div align="center">
+  <img src="docs/images/fan-controller/fan-flowchart-main.png" alt="โฟลว์ชาร์ตระบบควบคุมพัดลม" width="550" />
+</div>
+
+### สรุปฟังก์ชันคำสั่งผ่านคีย์แพ็ด (14 Functions)
+
+การตั้งค่าทำได้โดยกดปุ่ม `*` ตามด้วยหมายเลขฟังก์ชัน และยืนยันด้วย `#` (เช่น `*1#`):
+
+| รหัสฟังก์ชัน | คำสั่ง (Operation) | รายละเอียดและการตั้งค่า |
+|---|---|---|
+| `1` | Set time | ตั้งค่าเวลาปัจจุบันของนาฬิกา RTC (HH:MM:SS) |
+| `2` | Set speed control | กำหนดความเร็วรอบพัดลม (1-100%) แปลงเป็นค่า PWM Duty (300-1023) |
+| `3` | Set rotate direction | กำหนดทิศทางการหมุน (1: ซ้าย, 2: ขวา) |
+| `4` | TIMER OFF | ปิดการทำงานโหมดตั้งเวลา |
+| `5` | TIMER ON | เปิดการทำงานโหมดตั้งเวลาอัตโนมัติ |
+| `6` | Set the start time 1 | กำหนดเวลาเริ่มทำงานช่วงที่ 1 |
+| `7` | Set the stop time 1 | กำหนดเวลาหยุดทำงานช่วงที่ 1 |
+| `8` | Show the start & stop time 1 | แสดงช่วงเวลาทำงานที่ 1 บนจอ LCD |
+| `9` | Set the start time 2 | กำหนดเวลาเริ่มทำงานช่วงที่ 2 |
+| `10` | Set the stop time 2 | กำหนดเวลาหยุดทำงานช่วงที่ 2 |
+| `11` | Show the start & stop time 2 | แสดงช่วงเวลาทำงานที่ 2 บนจอ LCD |
+| `12` | Set the start temp | กำหนดค่าอุณหภูมิขั้นต่ำที่พัดลมเริ่มหมุน |
+| `13` | Set the stop temp | กำหนดค่าอุณหภูมิสูงสุดที่พัดลมหยุดหมุน |
+| `14` | Show the start & stop temp | แสดงช่วงอุณหภูมิที่ควบคุมบนจอ LCD |
+
+### ผลการทดสอบการทำงานจริง (Selected Test Cases)
+
+<div align="center">
+  <table>
+    <tr>
+      <td align="center" width="50%">
+        <img src="docs/images/fan-controller/lcd-test-case-02.jpeg" width="300" /><br>
+        <b>Case 02: กำหนดความเร็ว 60% หมุนซ้าย</b>
+      </td>
+      <td align="center" width="50%">
+        <img src="docs/images/fan-controller/lcd-test-case-03.jpeg" width="300" /><br>
+        <b>Case 03: สลับทิศทางหมุนขวา</b>
+      </td>
+    </tr>
+    <tr>
+      <td align="center">
+        <img src="docs/images/fan-controller/lcd-test-case-08.jpeg" width="300" /><br>
+        <b>Case 08: แสดงช่วงเวลาที่ 1 (00:01:00 - 00:02:00)</b>
+      </td>
+      <td align="center">
+        <img src="docs/images/fan-controller/lcd-test-case-15.jpeg" width="300" /><br>
+        <b>Case 15: มอเตอร์ทำงานจริงเมื่อถึงเวลาและอุณหภูมิ</b>
+      </td>
+    </tr>
+  </table>
+</div>
+
+---
+
+## 2. โครงงานที่ 2: เครื่องควบคุมหลอดไฟตามการเคลื่อนไหวแบบตั้งเวลาผ่านเว็บไซด์และบลูทูธ
+
+### สถาปัตยกรรมและตารางการต่อวงจร (Hardware Pinout)
+
+<div align="center">
+  <img src="docs/images/motion-light/light-circuit-schematic.png" alt="วงจรเชื่อมต่อระบบควบคุมหลอดไฟ ESP32" width="700" />
+</div>
+
+| อุปกรณ์ / โมดูล | ขาสัญญาณ | ขาบอร์ด ESP32 | หน้าที่การทำงาน |
+|---|---|---|---|
+| **PIR Sensor (HC-SR501)** | OUT | `GPIO 19` | เซนเซอร์ตรวจจับความเคลื่อนไหวของมนุษย์ |
+| **Light Bulb / LED** | Control Signal | `GPIO 25` | รีเลย์หรือไฟส่องสว่างหลัก |
+| **DS3231 RTC** | SDA / SCL | `GPIO 21` / `GPIO 22` | โมดูลนาฬิกาเวลาจริง I2C Bus |
+| **I2C LCD 16x2** | SDA / SCL | `GPIO 21` / `GPIO 22` | แสดงเวลา สถานะการตรวจจับ และสถานะหลอดไฟ/ไทม์เมอร์ |
+| **4x4 Matrix Keypad** | Rows (R1-R4) | `GPIO 4, 5, 12, 13` | แถวแนวนอน (Digital Output) |
+| **4x4 Matrix Keypad** | Cols (C1-C4) | `GPIO 14, 15, 32, 33` | คอลัมน์แนวตั้ง (Input Pull-Down) |
+
+### แผนผังการทำงานระบบ (Flowcharts)
+
+<div align="center">
+  <table>
+    <tr>
+      <td align="center" width="50%">
+        <img src="docs/images/motion-light/light-flowchart-main.png" width="400" /><br>
+        <b>Main Routine & Sensor Logic</b>
+      </td>
+      <td align="center" width="50%">
+        <img src="docs/images/motion-light/light-flowchart-ble.png" width="360" /><br>
+        <b>BLE UART Command Handler</b>
+      </td>
+    </tr>
+  </table>
+</div>
+
+### ระบบควบคุมและการสื่อสาร 3 ช่องทาง
+
+1. **การควบคุมผ่าน Keypad 4x4 และจอ LCD**
+   - รหัส `*1#` ถึง `*10#` สำหรับตั้งเวลาและตรวจสอบสถานะแบบ Standalone โดยไม่ต้องพึ่งเครือข่าย
+2. **การสื่อสารผ่าน Bluetooth Low Energy (BLE)**
+   - ใช้ Nordic UART Service UUID: `6E400001-B5A3-F393-E0A9-E50E24DCCA9E`
+   - รองรับคำสั่งข้อความ เช่น `ON`, `OFF`, `2` (อ่านค่าความเคลื่อนไหว), `3` (Timer OFF), `4` (Timer ON)
+3. **การควบคุมผ่าน Web Dashboard & Firebase Realtime Database**
+   - เว็บแอพพลิเคชันหน้าเดียว (SPA) เชื่อมต่อ Firebase Realtime Database แบบ Two-way Synchronization
+   - แยกเธรดการซิงค์ข้อมูลบน ESP32 ด้วย `_thread.start_new_thread(firebase_thread, ())` ทำให้ระบบฮาร์ดแวร์ทำงานได้ลื่นไหลไม่สะดุด
+
+### ผลการทดสอบหน้าจอ LCD จากการสั่งการจริง
+
+<div align="center">
+  <table>
+    <tr>
+      <td align="center" width="50%">
+        <img src="docs/images/motion-light/lcd-web-set-time.png" width="320" /><br>
+        <b>ตั้งเวลาผ่านเว็บสำเร็จ (Web: Set Time Updated)</b>
+      </td>
+      <td align="center" width="50%">
+        <img src="docs/images/motion-light/lcd-status-detect.png" width="320" /><br>
+        <b>PIR Sensor ตรวจพบความเคลื่อนไหว (Status: Detect)</b>
+      </td>
+    </tr>
+    <tr>
+      <td align="center">
+        <img src="docs/images/motion-light/lcd-timer-on.png" width="320" /><br>
+        <b>เปิดโหมดตั้งเวลา (Func 4 TIMER ON)</b>
+      </td>
+      <td align="center">
+        <img src="docs/images/motion-light/lcd-timer1-range.png" width="320" /><br>
+        <b>แสดงช่วงเวลาทำงาน T1 (00:00:10 ถึง 00:00:20)</b>
+      </td>
+    </tr>
+  </table>
+</div>
+
+---
+
+## คำแนะนำในการติดตั้งและใช้งาน (Getting Started)
+
+### อุปกรณ์ที่ต้องจัดเตรียม
+- บอร์ดไมโครคอนโทรลเลอร์ ESP32 NodeMCU
+- สาย Micro USB สำหรับเบิร์นเฟิร์มแวร์และสื่อสาร Serial
+- โมดูลเซนเซอร์: DHT22, PIR HC-SR501, DS3231 RTC, 4x4 Matrix Keypad, 16x2 I2C LCD, ไดรเวอร์มอเตอร์ ET-MINI / L298N
+
+### ขั้นตอนการติดตั้งเฟิร์มแวร์
+
+1. **ติดตั้งไดรเวอร์ Thonny IDE หรือ esptool**
+2. **แฟลช MicroPython Firmware** ลงบน ESP32:
+   ```bash
+   esptool.py --chip esp32 --port COM3 erase_flash
+   esptool.py --chip esp32 --port COM3 --baud 460800 write_flash -z 0x1000 ESP32_GENERIC-xxxx.bin
+   ```
+3. **อัปโหลดไฟล์ไดรเวอร์ใน `lib/` ไปยังหน่วยความจำบอร์ด**:
+   - `lib/ds3231.py`
+   - `lib/i2c_lcd.py`
+   - `lib/lcd_api.py`
+4. **เลือกโปรเจกต์ที่ต้องการใช้งาน**:
+   - **รันระบบพัดลม**: อัปโหลด `projects/01-temperature-fan-controller/main.py` เป็น `main.py` บนบอร์ด
+   - **รันระบบหลอดไฟ**: อัปโหลด `projects/02-motion-light-controller/firmware/main.py` เป็น `main.py` บนบอร์ด พร้อมแก้ไขค่า Wi-Fi และ Firebase Config ในโค้ด
+   - **เปิดเว็บควบคุมหลอดไฟ**: เปิดไฟล์ `projects/02-motion-light-controller/web/index.html` บนเว็บเบราว์เซอร์

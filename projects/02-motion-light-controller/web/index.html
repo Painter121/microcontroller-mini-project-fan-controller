@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Control - Smart Motion Light</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
+    <style>
+        body, html { 
+            margin: 0; padding: 0; height: 100%; 
+            font-family: Arial, sans-serif; 
+            background-color: #ffffff; color: #000000;
+            overflow: hidden; 
+        }
+        
+        header { 
+            border-bottom: 1px solid #cccccc; padding: 20px; 
+            text-align: center; font-size: 22px; font-weight: normal;
+            height: 70px; box-sizing: border-box;
+        }
+
+        .dashboard-container { 
+            display: flex; gap: 30px; padding: 30px; 
+            height: calc(100vh - 70px); 
+            box-sizing: border-box; max-width: 1200px; margin: 0 auto;
+        }
+
+        .column { 
+            flex: 1; display: flex; flex-direction: column; gap: 30px; 
+        }
+
+        .card { 
+            border: 1px solid #cccccc; padding: 20px; 
+            display: flex; flex-direction: column;
+        }
+
+        .card h3 { 
+            margin-top: 0; border-bottom: 1px solid #eeeeee; 
+            padding-bottom: 10px; margin-bottom: 15px; font-weight: normal; 
+            font-size: 18px; text-transform: uppercase; letter-spacing: 1px;
+        }
+
+        .status-box { 
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 0; border-bottom: 1px dashed #eeeeee;
+            font-size: 16px;
+        }
+        .status-box:last-child { border-bottom: none; }
+
+        .time-section { 
+            margin-bottom: 25px; border-bottom: 1px solid #eeeeee; padding-bottom: 15px; 
+        }
+        .time-section:last-child { 
+            border-bottom: none; padding-bottom: 0; margin-bottom: 0; 
+        }
+        
+        .show-time { font-size: 14px; margin-bottom: 15px; color: #333333; }
+        .show-time strong { font-weight: normal; color: #000000; }
+        
+        .time-row { 
+            display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 14px;
+        }
+        .time-label { width: 150px; } 
+        
+        input[type="number"] { 
+            width: 50px; padding: 8px; text-align: center; 
+            border: 1px solid #cccccc; font-size: 14px;
+            outline: none;
+        }
+        input[type="number"]:focus { border-color: #000000; }
+
+        .btn-group {
+            display: flex; gap: 10px; margin-top: 10px;
+        }
+
+        button { 
+            padding: 12px; border: 1px solid #000000; border-radius: 0;
+            background-color: #ffffff; color: #000000; font-size: 14px; 
+            cursor: pointer; transition: background-color 0.2s, color 0.2s;
+            width: 100%; text-transform: uppercase;
+        }
+        button:hover { background-color: #000000; color: #ffffff; }
+
+        .btn-secondary { background-color: #f0f0f0; border-color: #cccccc; color: #333333; }
+        .btn-secondary:hover { background-color: #dddddd; color: #000000; border-color: #aaaaaa; }
+
+        button:disabled {
+            background-color: #eeeeee;
+            color: #aaaaaa;
+            border-color: #cccccc;
+            cursor: not-allowed;
+        }
+        button:disabled:hover {
+            background-color: #eeeeee;
+            color: #aaaaaa;
+        }
+
+        .spacer { flex: 1; }
+
+        @media (max-width: 768px) {
+            body, html { overflow: auto; }
+            .dashboard-container { flex-direction: column; height: auto; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>Web Control</header>
+
+    <div class="dashboard-container">
+        
+        <div class="column">
+            
+            <div class="card">
+                <h3>Status</h3>
+                <div class="status-box">
+                    <span>Device Time:</span> <strong id="dev_time">--:--:--</strong>
+                </div>
+                <div class="status-box">
+                    <span>แสดงสถานะการเคลื่อนไหว:</span> <strong id="dev_motion">--</strong>
+                </div>
+                <div class="status-box">
+                    <span>Bulb Status:</span> <strong id="dev_bulb">--</strong>
+                </div>
+            </div>
+
+            <div class="card spacer">
+                <h3>Control</h3>
+                <button id="btn_bulb" onclick="toggleBulb()" style="margin-bottom: 10px;">Manual Bulb: OFF</button>
+                <button id="btn_timer" onclick="toggleTimer()">TIMER OFF</button>
+                
+                <div class="spacer"></div>
+
+                <div class="time-section" style="border-top: 1px solid #eeeeee; padding-top: 15px;">
+                    <span style="display: block; margin-bottom: 10px; font-size: 14px;">Function 1: Set time</span>
+                    <div class="time-row">
+                        <input type="number" id="set_h" min="0" max="23" placeholder="HH"> :
+                        <input type="number" id="set_m" min="0" max="59" placeholder="MM"> :
+                        <input type="number" id="set_s" min="0" max="59" placeholder="SS">
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn-secondary" onclick="loadDeviceTime()">Show Time</button>
+                        <button onclick="setCustomTime()">Set time</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="column">
+            
+            <div class="card spacer">
+                <h3>set Time</h3>
+                
+                <div class="time-section">
+                    <div class="show-time"><b>Set the start time 1:</b> <strong id="show_time1">--:--:-- to --:--:--</strong></div>
+                    
+                    <div class="time-row">
+                        <span class="time-label">Start</span>
+                        <input type="number" id="sh1" min="0" max="23" placeholder="HH"> :
+                        <input type="number" id="sm1" min="0" max="59" placeholder="MM"> :
+                        <input type="number" id="ss1" min="0" max="59" placeholder="SS">
+                    </div>
+
+                    <div class="time-row">
+                        <span class="time-label">Stop</span>
+                        <input type="number" id="eh1" min="0" max="23" placeholder="HH"> :
+                        <input type="number" id="em1" min="0" max="59" placeholder="MM"> :
+                        <input type="number" id="es1" min="0" max="59" placeholder="SS">
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn-secondary" onclick="loadTimer1()">Show Timer 1</button>
+                        <button onclick="saveTimer1()">Set Timer 1</button>
+                    </div>
+                </div>
+
+                <div class="time-section">
+                    <div class="show-time"><b>Set the start time 2:</b> <strong id="show_time2">--:--:-- to --:--:--</strong></div>
+                    
+                    <div class="time-row">
+                        <span class="time-label">Start</span>
+                        <input type="number" id="sh2" min="0" max="23" placeholder="HH"> :
+                        <input type="number" id="sm2" min="0" max="59" placeholder="MM"> :
+                        <input type="number" id="ss2" min="0" max="59" placeholder="SS">
+                    </div>
+                    <div class="time-row">
+                        <span class="time-label">Stop</span>
+                        <input type="number" id="eh2" min="0" max="23" placeholder="HH"> :
+                        <input type="number" id="em2" min="0" max="59" placeholder="MM"> :
+                        <input type="number" id="es2" min="0" max="59" placeholder="SS">
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn-secondary" onclick="loadTimer2()">Show Timer 2</button>
+                        <button onclick="saveTimer2()">Set Timer 2</button>
+                    </div>
+                </div>
+
+                <div class="spacer"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        // Config Firebase Realtime Database
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            databaseURL: "https://<YOUR_FIREBASE_PROJECT>.asia-southeast1.firebasedatabase.app/",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        let currentTimerStatus = 0;
+        let currentBulbStatus = 0;
+        
+        let latestControlData = {};
+        let latestStatusData = {};
+
+        const pad = (n) => String(n || 0).padStart(2, '0');
+
+        db.ref('status').on('value', (snapshot) => {
+            const data = snapshot.val();
+            if(data) {
+                latestStatusData = data;
+                document.getElementById('dev_time').innerText = 
+                    `${pad(data.cur_h)}:${pad(data.cur_m)}:${pad(data.cur_s)}`;
+                document.getElementById('dev_motion').innerText = data.sensor ? "ตรวจพบการเคลื่อนไหว" : "ปกติ";
+                document.getElementById('dev_bulb').innerText = data.bulb ? "ON" : "OFF";
+            }
+        });
+
+        db.ref('control').on('value', (snapshot) => {
+            const data = snapshot.val();
+            if(data) {
+                latestControlData = data;
+                
+                currentTimerStatus = data.timer || 0;
+                document.getElementById('btn_timer').innerText = currentTimerStatus ? "TIMER ON" : "TIMER OFF";
+                
+                currentBulbStatus = data.bulb || 0;
+                const btnBulb = document.getElementById('btn_bulb');
+                btnBulb.innerText = currentBulbStatus ? "Manual Bulb: ON" : "Manual Bulb: OFF";
+
+                if(currentTimerStatus === 1) {
+                    btnBulb.disabled = true;
+                } else {
+                    btnBulb.disabled = false;
+                }
+                const show1 = `${pad(data.sh1)}:${pad(data.sm1)}:${pad(data.ss1)} to ${pad(data.eh1)}:${pad(data.em1)}:${pad(data.es1)}`;
+                const show2 = `${pad(data.sh2)}:${pad(data.sm2)}:${pad(data.ss2)} to ${pad(data.eh2)}:${pad(data.em2)}:${pad(data.es2)}`;
+                
+                document.getElementById('show_time1').innerText = show1;
+                document.getElementById('show_time2').innerText = show2;
+            }
+        });
+
+        function toggleBulb() { 
+            if(currentTimerStatus === 1) {
+                alert("กรุณาเปลี่ยนสถานะเป็น TIMER OFF ก่อนใช้งาน Manual Bulb ครับ");
+                return;
+            }
+            db.ref('control/bulb').set(currentBulbStatus === 0 ? 1 : 0); 
+        }
+
+        function toggleTimer() { 
+            db.ref('control/timer').set(currentTimerStatus === 0 ? 1 : 0); 
+        }
+
+        function getVal(id) {
+            const val = parseInt(document.getElementById(id).value);
+            return isNaN(val) ? 0 : val;
+        }
+
+        function loadDeviceTime() {
+            if(!latestStatusData) return;
+            document.getElementById('set_h').value = pad(latestStatusData.cur_h || 0);
+            document.getElementById('set_m').value = pad(latestStatusData.cur_m || 0);
+            document.getElementById('set_s').value = pad(latestStatusData.cur_s || 0);
+        }
+
+        function loadTimer1() {
+            if(!latestControlData) return;
+            document.getElementById('sh1').value = pad(latestControlData.sh1 || 0);
+            document.getElementById('sm1').value = pad(latestControlData.sm1 || 0);
+            document.getElementById('ss1').value = pad(latestControlData.ss1 || 0);
+            document.getElementById('eh1').value = pad(latestControlData.eh1 || 0);
+            document.getElementById('em1').value = pad(latestControlData.em1 || 0);
+            document.getElementById('es1').value = pad(latestControlData.es1 || 0);
+        }
+
+        function loadTimer2() {
+            if(!latestControlData) return;
+            document.getElementById('sh2').value = pad(latestControlData.sh2 || 0);
+            document.getElementById('sm2').value = pad(latestControlData.sm2 || 0);
+            document.getElementById('ss2').value = pad(latestControlData.ss2 || 0);
+            document.getElementById('eh2').value = pad(latestControlData.eh2 || 0);
+            document.getElementById('em2').value = pad(latestControlData.em2 || 0);
+            document.getElementById('es2').value = pad(latestControlData.es2 || 0);
+        }
+
+        function setCustomTime() {
+            const h = getVal('set_h');
+            const m = getVal('set_m');
+            const s = getVal('set_s');
+            if(h < 0 || h > 23 || m < 0 || m > 59 || s < 0 || s > 59) {
+                alert("Please enter a valid time (HH: 0-23, MM: 0-59, SS: 0-59).");
+                return;
+            }
+            db.ref('control').update({
+                set_rtc: 1, cur_h: h, cur_m: m, cur_s: s
+            });
+            alert("Set time successful.");
+            document.getElementById('set_h').value = '';
+            document.getElementById('set_m').value = '';
+            document.getElementById('set_s').value = '';
+        }
+
+        function saveTimer1() {
+            db.ref('control').update({
+                sh1: getVal('sh1'), sm1: getVal('sm1'), ss1: getVal('ss1'),
+                eh1: getVal('eh1'), em1: getVal('em1'), es1: getVal('es1')
+            });
+            alert("Timer 1 settings saved.");
+            ['sh1', 'sm1', 'ss1', 'eh1', 'em1', 'es1'].forEach(id => document.getElementById(id).value = '');
+        }
+
+        function saveTimer2() {
+            db.ref('control').update({
+                sh2: getVal('sh2'), sm2: getVal('sm2'), ss2: getVal('ss2'),
+                eh2: getVal('eh2'), em2: getVal('em2'), es2: getVal('es2')
+            });
+            alert("Timer 2 settings saved.");
+            ['sh2', 'sm2', 'ss2', 'eh2', 'em2', 'es2'].forEach(id => document.getElementById(id).value = '');
+        }
+    </script>
+</body>
+</html>
