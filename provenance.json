@@ -6,5 +6,26 @@
     "sha256": "e524abcbd6903e99f718fcc9bcfe360be9495ed225d4cbfa019295b7cd63d93b",
     "modified": true,
     "note": "Converted trailing Thai note into a Python comment; original unchanged."
+  },
+  {
+    "source": "micro controller/lab 8/i2c_lcd.py",
+    "destination": "lib/i2c_lcd.py",
+    "source_sha256": "76c2e6c44d1e652abcf57aa17cce8d289c15efe99f7d55d792b67e0f6e5d74bb",
+    "sha256": "76c2e6c44d1e652abcf57aa17cce8d289c15efe99f7d55d792b67e0f6e5d74bb",
+    "modified": false
+  },
+  {
+    "source": "micro controller/lab 8/lcd_api.py",
+    "destination": "lib/lcd_api.py",
+    "source_sha256": "16391f98006c5bcaa8888b5d96764395323eab56421a390bec6b573abd8de8fc",
+    "sha256": "16391f98006c5bcaa8888b5d96764395323eab56421a390bec6b573abd8de8fc",
+    "modified": false
+  },
+  {
+    "source": "driver/ds3231.py",
+    "destination": "lib/ds3231.py",
+    "source_sha256": "9049742393f527754d32c4e3039ed563b32cae6997052e73994a9ff0b3ac83dd",
+    "sha256": "9049742393f527754d32c4e3039ed563b32cae6997052e73994a9ff0b3ac83dd",
+    "modified": false
   }
 ]

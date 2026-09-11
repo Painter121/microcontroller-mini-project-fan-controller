@@ -1,3 +1,7 @@
+import sys
+if "lib" not in sys.path:
+    sys.path.append("lib")
+
 from machine import Pin, SoftI2C,PWM
 from lcd_api import LcdApi
 from i2c_lcd import I2cLcd
