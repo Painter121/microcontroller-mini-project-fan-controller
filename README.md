@@ -233,7 +233,35 @@ microcontroller-mini-project-fan-controller/
 
 ## ผู้จัดทำและคณะผู้พัฒนา (Contributors)
 
-โครงงานทั้งหมดนี้เป็นผลงานการพัฒนาร่วมกันโดย:
+<div align="center">
 
-- **[Painter121](https://github.com/Painter121)** (ภูริภัทร มะลิซ้อน)
-- **[Akkaradet-Wong](https://github.com/Akkaradet-Wong)** (อัครเดช วงค์บำราบ)
+<p>โครงงานทั้งหมดนี้เป็นผลงานการพัฒนาร่วมกันโดย</p>
+
+<table>
+  <tr>
+    <td align="center" width="240">
+      <a href="https://github.com/Painter121">
+        <img src="https://images.weserv.nl/?url=github.com/Painter121.png&mask=circle&w=150&h=150" width="110" height="110" alt="Painter121" />
+        <br /><br />
+        <b>ภูริภัทร มะลิซ้อน</b>
+      </a>
+      <br />
+      <a href="https://github.com/Painter121">
+        <img src="https://img.shields.io/badge/GitHub-Painter121-181717?style=flat-square&logo=github" alt="Painter121 GitHub" />
+      </a>
+    </td>
+    <td align="center" width="240">
+      <a href="https://github.com/Akkaradet-Wong">
+        <img src="https://images.weserv.nl/?url=github.com/Akkaradet-Wong.png&mask=circle&w=150&h=150" width="110" height="110" alt="Akkaradet-Wong" />
+        <br /><br />
+        <b>อัครเดช วงค์บำราบ</b>
+      </a>
+      <br />
+      <a href="https://github.com/Akkaradet-Wong">
+        <img src="https://img.shields.io/badge/GitHub-Akkaradet--Wong-181717?style=flat-square&logo=github" alt="Akkaradet-Wong GitHub" />
+      </a>
+    </td>
+  </tr>
+</table>
+
+</div>
