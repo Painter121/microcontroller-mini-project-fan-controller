@@ -228,3 +228,12 @@ microcontroller-mini-project-fan-controller/
    - **รันระบบพัดลม**: อัปโหลด `projects/01-temperature-fan-controller/main.py` เป็น `main.py` บนบอร์ด
    - **รันระบบหลอดไฟ**: อัปโหลด `projects/02-motion-light-controller/firmware/main.py` เป็น `main.py` บนบอร์ด พร้อมแก้ไขค่า Wi-Fi และ Firebase Config ในโค้ด
    - **เปิดเว็บควบคุมหลอดไฟ**: เปิดไฟล์ `projects/02-motion-light-controller/web/index.html` บนเว็บเบราว์เซอร์
+
+---
+
+## ผู้จัดทำและคณะผู้พัฒนา (Contributors)
+
+โครงงานทั้งหมดนี้เป็นผลงานการพัฒนาร่วมกันโดย:
+
+- **[Painter121](https://github.com/Painter121)** (ภูริภัทร มะลิซ้อน)
+- **[Akkaradet-Wong](https://github.com/Akkaradet-Wong)** (อัครเดช วงค์บำราบ)
